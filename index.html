@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teega Narasimharao - Data Scientist Portfolio</title>
+  <meta name="description"
+    content="Portfolio of Teega Narasimharao - Data Analyst, Python Developer, and AI & ML Enthusiast">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <script src="three.min.js"></script>
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <nav class="container">
+      <a href="#" class="logo">Teega Narasimharao</a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#education">Education</a></li>
+        <li><a href="#testimonials">Testimonials</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="btn-resume" onclick="window.open('Narasimharao_Resume.pdf', '_blank')">Resume</button>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero container">
+    <div class="hero-content fade-in-up">
+      <p class="hero-greeting">Hello, I'm</p>
+      <h1 class="hero-name">Teega Narasimharao</h1>
+      <div class="hero-roles">
+        <span class="role-prefix">I'm a </span>
+        <span class="typing-text" id="typing-text"></span>
+        <span class="typing-cursor">|</span>
+      </div>
+      <p class="hero-subtitle">I Build Solutions That Make an Impact</p>
+      <div class="hero-buttons">
+        <a href="#contact" class="btn btn-primary">Hire Me</a>
+        <a href="Narasimharao_Resume.pdf" download class="btn btn-secondary">Download Resume</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div id="canvas-container"></div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="container">
+    <div class="section-header">
+      <h2 class="section-title">About Me</h2>
+    </div>
+    <div class="about-container">
+      <div class="about-image">
+        <img src="profile_professional.png" alt="Teega Narasimharao" class="profile-img" id="profile-image">
+      </div>
+      <div class="about-content">
+        <h2>Hello, I'm <span class="text-gradient">Teega Narasimharao</span></h2>
+        <p>
+          I am a <strong>Data Analyst and AI Developer</strong> passionate about turning complex data into actionable
+          insights.
+          With strong expertise in <strong>Python, SQL, and Machine Learning</strong>, I build intelligent systems that
+          solve real-world problems.
+          I combine technical depth with creative problem-solving to deliver innovative, data-driven solutions.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Skills & Expertise</h2>
+      <p class="section-subtitle">Technologies and tools I work with</p>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <h3>🐍 Python</h3>
+        <p>Expert in Python programming for data analysis, machine learning, and automation</p>
+      </div>
+      <div class="skill-card">
+        <h3>🗄️ SQL</h3>
+        <p>Advanced SQL queries, database design, and optimization for large-scale data systems</p>
+      </div>
+      <div class="skill-card">
+        <h3>📊 Power BI</h3>
+        <p>Creating interactive dashboards and data visualizations for business intelligence</p>
+      </div>
+      <div class="skill-card">
+        <h3>🧠 Machine Learning</h3>
+        <p>Building predictive models using scikit-learn, TensorFlow, and PyTorch</p>
+      </div>
+      <div class="skill-card">
+        <h3>🔀 Git & Version Control</h3>
+        <p>Proficient in Git workflows, collaboration, and code management</p>
+      </div>
+      <div class="skill-card">
+        <h3>🌐 Web Technologies</h3>
+        <p>HTML, CSS, JavaScript, and modern web frameworks for full-stack development</p>
+      </div>
+      <div class="skill-card">
+        <h3>📈 Data Analysis</h3>
+        <p>Statistical analysis, data cleaning, and exploratory data analysis with pandas and numpy</p>
+      </div>
+      <div class="skill-card">
+        <h3>🔮 Deep Learning</h3>
+        <p>Neural networks, computer vision, and natural language processing</p>
+      </div>
+      <div class="skill-card">
+        <h3>🤖 Vibe Coder</h3>
+        <p>Building websites and software using AI assistants like Claude, ChatGPT, and Cursor AI</p>
+      </div>
+      <div class="skill-card">
+        <h3>💡 Prompt Engineer</h3>
+        <p>Crafting effective AI prompts to generate code, content, and creative solutions</p>
+      </div>
+      <div class="skill-card">
+        <h3>🖥️ AI Web Development</h3>
+        <p>Creating modern websites rapidly using AI-powered development tools and workflows</p>
+      </div>
+      <div class="skill-card">
+        <h3>⚡ AI Software Creation</h3>
+        <p>Building applications and automations by leveraging generative AI technologies</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects Section -->
+  <section id="projects" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Featured Projects</h2>
+      <p class="section-subtitle">Some of my recent work</p>
+    </div>
+    <div class="projects-grid">
+      <div class="project-card" onclick="openProjectModal('ser')">
+        <div class="project-image">🤖</div>
+        <div class="project-content">
+          <h3>Speech Emotion Recognition</h3>
+          <p>Machine learning system to recognize emotions from speech patterns using audio signal processing.</p>
+          <div class="project-tags">
+            <span class="tag">Python</span>
+            <span class="tag">TensorFlow</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card" onclick="openProjectModal('sales')">
+        <div class="project-image">📊</div>
+        <div class="project-content">
+          <h3>Sales Analytics Dashboard</h3>
+          <p>Interactive Power BI dashboard for real-time sales tracking and forecasting.</p>
+          <div class="project-tags">
+            <span class="tag">Power BI</span>
+            <span class="tag">SQL</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card" onclick="openProjectModal('fraud')">
+        <div class="project-image">🔍</div>
+        <div class="project-content">
+          <h3>Fraud Detection System</h3>
+          <p>Machine learning model to detect fraudulent transactions with 98% precision.</p>
+          <div class="project-tags">
+            <span class="tag">Scikit-learn</span>
+            <span class="tag">XGBoost</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card" onclick="openProjectModal('customer')">
+        <div class="project-image">🎯</div>
+        <div class="project-content">
+          <h3>Customer Segmentation</h3>
+          <p>Clustering analysis to identify customer segments for targeted marketing.</p>
+          <div class="project-tags">
+            <span class="tag">K-Means</span>
+            <span class="tag">Pandas</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card" onclick="openProjectModal('webscrape')">
+        <div class="project-image">🌐</div>
+        <div class="project-content">
+          <h3>Web Scraping Tool</h3>
+          <p>Automated data collection system for market research and competitive analysis.</p>
+          <div class="project-tags">
+            <span class="tag">Selenium</span>
+            <span class="tag">Soup</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card" onclick="openProjectModal('stock')">
+        <div class="project-image">📈</div>
+        <div class="project-content">
+          <h3>Stock Price Predictor</h3>
+          <p>LSTM-based deep learning model for stock price prediction and trend analysis.</p>
+          <div class="project-tags">
+            <span class="tag">LSTM</span>
+            <span class="tag">Keras</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section id="services" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Services</h2>
+      <p class="section-subtitle">What I can do for you</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <h3>Data Analysis</h3>
+        <p>Transform raw data into meaningful insights through advanced statistical analysis and visualization
+          techniques</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤖</div>
+        <h3>Machine Learning</h3>
+        <p>Build and deploy custom ML models for prediction, classification, and pattern recognition</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📈</div>
+        <h3>Business Intelligence</h3>
+        <p>Create interactive dashboards and reports to drive data-driven decision making</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🔧</div>
+        <h3>Data Engineering</h3>
+        <p>Design and implement robust data pipelines for efficient data processing and storage</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💡</div>
+        <h3>Consulting</h3>
+        <p>Provide expert guidance on data strategy, AI implementation, and technology adoption</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🎓</div>
+        <h3>Training & Workshops</h3>
+        <p>Conduct training sessions on data science, Python programming, and ML fundamentals</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience Section -->
+  <section id="experience" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Experience</h2>
+      <p class="section-subtitle">My professional journey</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-date">January 2024 - April 2024</div>
+          <h3>Data Analyst Internship</h3>
+          <p class="timeline-company">CS CODENZ</p>
+          <p>Gained hands-on experience in data analysis, visualization, and statistical modeling. Worked on real-world
+            datasets to extract insights and support business decisions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Education Section -->
+  <section id="education" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Education</h2>
+      <p class="section-subtitle">Academic background</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-date">2021 - 2025</div>
+          <h3>Bachelor of Technology (B.Tech) in Computer Data Science and Engineering</h3>
+          <p class="timeline-company">Chalapathi Institute of Engineering and Technology</p>
+          <p>8 CGPA with Distinction</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-date">2019 - 2021</div>
+          <h3>Intermediate (Class 12)</h3>
+          <p class="timeline-company">NRI Junior College</p>
+          <p>7.5 CGPA</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-date">2018 - 2019</div>
+          <h3>Secondary School Certificate (Class 10)</h3>
+          <p class="timeline-company">Secondary School Education</p>
+          <p>8.2 CGPA</p>
+        </div>
+      </div>
+
+
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Testimonials</h2>
+      <p class="section-subtitle">What people say about my work</p>
+    </div>
+    <div class="testimonials-slider">
+      <div class="testimonial-card">
+        <p class="testimonial-text">
+          "Teega was an exceptional intern at CS CODENZ. His quick learning ability and enthusiasm for data analysis
+          made him stand out. He successfully completed multiple projects and showed great potential in the field of
+          data science."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar"></div>
+          <div class="author-info">
+            <h4>Er.Y V D CHANDRA SEKHAR</h4>
+            <p class="author-role">Internship Supervisor, CS CODENZ</p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-text">
+          "Teega is an outstanding student with excellent analytical skills. During his academic projects, he
+          demonstrated strong problem-solving abilities and a deep understanding of data science concepts. He will be a
+          valuable asset to any organization."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar"></div>
+          <div class="author-info">
+            <h4>KIRANMAI</h4>
+            <p class="author-role">Professor, Chalapathi Institute of Engineering and Technology</p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-text">
+          "I had the pleasure of mentoring Teega during his final year project. His dedication to learning new
+          technologies and ability to apply theoretical knowledge to practical problems is impressive. He has a bright
+          future ahead in data analytics."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar"></div>
+          <div class="author-info">
+            <h4>Anil Verma</h4>
+            <p class="author-role">Project Mentor & Senior Data Scientist</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="container">
+    <div class="section-header">
+      <h2 class="section-title">Get In Touch</h2>
+      <p class="section-subtitle">Let's discuss your next project</p>
+    </div>
+    <div class="contact-container">
+      <div class="contact-info">
+        <div class="contact-item">
+          <span class="contact-icon">📞</span>
+          <div class="contact-details">
+            <h3>Phone</h3>
+            <a href="tel:+917997181685">+91 7997181685</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="contact-icon">✉️</span>
+          <div class="contact-details">
+            <h3>Email</h3>
+            <a href="mailto:teeganarasimharao@gmail.com">teeganarasimharao@gmail.com</a>
+          </div>
+        </div>
+      </div>
+      <form class="contact-form" id="contact-form">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required placeholder="Your Name">
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" required placeholder="Project Inquiry">
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" required placeholder="Tell me about your project..."></textarea>
+        </div>
+        <button type="submit" class="form-submit" id="form-submit-btn">
+          <span>Send Message</span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <h3>Teega Narasimharao</h3>
+        <p>Data Analyst | Python Developer | AI & ML Enthusiast</p>
+        <div class="social-links">
+          <a href="https://linkedin.com/in/teeganarasimharao" target="_blank" class="social-link"
+            aria-label="LinkedIn">💼</a>
+          <a href="https://github.com/teeganarasimharao" target="_blank" class="social-link" aria-label="GitHub">💻</a>
+          <a href="https://twitter.com/teeganarasimha" target="_blank" class="social-link" aria-label="Twitter">🐦</a>
+          <a href="mailto:teeganarasimharao@gmail.com" class="social-link" aria-label="Email">✉️</a>
+        </div>
+      </div>
+  </footer>
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" id="scroll-to-top" title="Back to Top">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+  </button>
+
+  <!-- AI Chatbot Widget V2 -->
+  <div class="chatbot-container">
+    <div class="chat-toggle" id="chat-toggle">
+      <span class="chat-pulsing-ring"></span>
+      <span class="chat-notification" id="chat-notification" style="display: none;">1</span>
+    </div>
+
+    <div class="chat-window" id="chat-window">
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="ai-avatar">
+            <span class="ai-avatar-icon">🤖</span>
+            <span class="ai-status-indicator"></span>
+          </div>
+          <div class="chat-title-info">
+            <span class="chat-title">T-Bot</span>
+            <span class="chat-status">Online • Ready to help</span>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="theme-toggle-btn" id="chat-theme-toggle" title="Toggle Theme">🌙</button>
+          <button class="chat-close" id="chat-close">×</button>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <!-- Messages will appear here -->
+      </div>
+
+      <div class="chat-input-area">
+        <div class="chat-options" id="chat-options">
+          <!-- Dynamic options will be injected here -->
+        </div>
+        <div class="input-wrapper">
+          <button class="voice-btn" id="voice-btn" title="Voice Input">🎤</button>
+          <input type="text" id="user-input" placeholder="Ask me anything about Teega..." autocomplete="off">
+          <button id="send-btn" title="Send Message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+            </svg>
+          </button>
+        </div>
+        <div class="voice-indicator" id="voice-indicator" style="display: none;">
+          <span class="voice-wave"></span>
+          <span class="voice-wave"></span>
+          <span class="voice-wave"></span>
+          <span class="voice-text">Listening...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Detail Modal -->
+  <div class="project-modal-overlay" id="project-modal">
+    <div class="project-modal-container">
+      <button class="modal-close" onclick="closeProjectModal()">×</button>
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-icon" id="modal-icon">🤖</div>
+          <div class="modal-title-group">
+            <h2 id="modal-title">Project Title</h2>
+            <div class="modal-tags" id="modal-tags">
+              <!-- Tags injected here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <div class="demo-container" id="demo-container">
+            <!-- Interactive Demo UI injected here -->
+            <div class="start-screen">
+              <button class="btn-primary" id="start-demo-btn">🚀 Launch Demo</button>
+            </div>
+          </div>
+
+          <div class="project-details-text">
+            <h3>About this Project</h3>
+            <p id="modal-description">Project description goes here...</p>
+
+            <div class="modal-links">
+              <a href="#" class="btn-secondary" id="modal-github">View Code</a>
+              <a href="#" class="btn-primary" id="modal-live">Live Preview</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js for Data Viz Demos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="script.js?v=2"></script>
+</body>
+
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Analytics Dashboard - Teega Narasimharao</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Specific page overrides */
+        .project-page {
+            padding-top: 80px;
+        }
+
+        .project-hero {
+            text-align: center;
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .demo-container-full {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.05);
+        }
+
+        .chart-area {
+            height: 400px;
+            width: 100%;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn.active {
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="container">
+            <a href="index.html#projects" class="back-link">← Back to Projects</a>
+        </nav>
+    </header>
+
+    <main class="container project-page">
+        <section class="project-hero animate-fade-up">
+            <h1 class="hero-name">Sales Analytics Dashboard</h1>
+            <p class="hero-subtitle">Interactive Insights for Business Growth</p>
+            <div style="margin-top: 1.5rem;">
+                <a href="#" class="btn-secondary"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                        </path>
+                    </svg>
+                    View Source Code
+                </a>
+            </div>
+        </section>
+
+        <!-- Live Demo Section -->
+        <section class="demo-section animate-fade-up delay-1">
+            <div class="section-header">
+                <h2 class="section-title">Live Demo</h2>
+                <div class="line"></div>
+            </div>
+
+            <div class="demo-container-full">
+                <!-- Summary Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-rev">$1.2M</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-orders">5,432</div>
+                        <div class="stat-label">Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avg-order">$220</div>
+                        <div class="stat-label">Avg. Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="growth">+15%</div>
+                        <div class="stat-label">Growth (YoY)</div>
+                    </div>
+                </div>
+
+                <div class="charts-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                    <div class="chart-area">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                    <div class="chart-area">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="demo-controls">
+                    <button class="control-btn active" onclick="updateChart('2023')">2023</button>
+                    <button class="control-btn" onclick="updateChart('2024')">2024</button>
+                    <button class="control-btn" onclick="toggleMetric('revenue')">Revenue</button>
+                    <button class="control-btn" onclick="toggleMetric('orders')">Orders</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="project-details grid-2-col animate-fade-up delay-2">
+            <div class="details-left">
+                <h3>Business Value & Impact</h3>
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary-color); margin-bottom: 2rem;">
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.8rem;">📈 <strong>15% Revenue Growth</strong> identified through
+                            underperforming region analysis.</li>
+                        <li style="margin-bottom: 0.8rem;">⏱️ <strong>Saved 20+ Hours/Week</strong> by automating manual
+                            Excel reporting pipelines.</li>
+                        <li>📊 <strong>Data-Driven Decisions</strong> enabled for C-suite via real-time KPI tracking.
+                        </li>
+                    </ul>
+                </div>
+
+                <h3>About the Project</h3>
+                <p>This interactive dashboard transforms raw sales data into actionable insights effectively. Built as a
+                    business intelligence tool, it helps stakeholders monitor key performance indicators (KPIs) in
+                    real-time, identify regional trends, and track product performance.</p>
+                <p>The backend uses **SQL** for complex data aggregation, while the frontend leverages modern
+                    visualization libraries to present data dynamically.</p>
+            </div>
+            <div class="details-right">
+                <h3>Tech Stack</h3>
+                <div class="tags-container">
+                    <span class="tag">Power BI</span>
+                    <span class="tag">SQL</span>
+                    <span class="tag">DAX</span>
+                    <span class="tag">Data Warehousing</span>
+                    <span class="tag">Excel</span>
+                </div>
+                <h3>Key Features</h3>
+                <ul class="feature-list">
+                    <li>Dynamic Time-Series Analysis</li>
+                    <li>Regional Performance Heatmaps</li>
+                    <li>Product Category Drill-downs</li>
+                    <li>Auto-refreshing Data Pipelines</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Teega Narasimharao. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Data
+        let currentYear = '2023';
+        let currentMetric = 'revenue';
+        let lineChart = null;
+        let pieChart = null;
+
+        // Default / Fallback Data
+        let data = {
+            '2023': {
+                revenue: [12000, 19000, 3000, 5000, 2000, 3000, 15000, 21000, 18000, 25000, 29000, 32000],
+                orders: [120, 190, 30, 50, 20, 30, 150, 210, 180, 250, 290, 320],
+                categories: [30, 20, 15, 35],
+                stats: { total: '$1.2M', orders: '5,432', avg: '$220', growth: '+15%' }
+            },
+            '2024': {
+                revenue: [15000, 22000, 6000, 8000, 5000, 6000, 18000, 25000, 22000, 28000, 34000, 38000],
+                orders: [150, 220, 60, 80, 50, 60, 180, 250, 220, 280, 340, 380],
+                categories: [40, 25, 10, 25],
+                stats: { total: '$1.8M', orders: '6,100', avg: '$295', growth: '+22%' }
+            }
+        };
+
+        const ctxLine = document.getElementById('salesChart').getContext('2d');
+        const ctxPie = document.getElementById('categoryChart').getContext('2d');
+
+        async function initCharts() {
+            // Attempt to fetch fresh data from backend
+            try {
+                const response = await fetch('http://localhost:5000/api/sales/data');
+                if (!response.ok) throw new Error("API Offline");
+                const apiData = await response.json();
+
+                // Update 2024 stats with real-time data from API if available
+                if (apiData.total_revenue) {
+                    data['2024'].stats.total = '$' + (apiData.total_revenue / 1000000).toFixed(1) + 'M';
+                    data['2024'].stats.growth = '+' + apiData.growth + '%';
+                }
+            } catch (error) {
+                console.warn("Backend unavailable, using static data:", error);
+            }
+
+            // Line Chart
+            lineChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: data['2023'].revenue,
+                        borderColor: '#b8ff3c',
+                        backgroundColor: 'rgba(184, 255, 60, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#fff' } } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#ccc' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#ccc' } }
+                    }
+                }
+            });
+
+            // Pie Chart
+            pieChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Electronics', 'Fashion', 'Home', 'Sports'],
+                    datasets: [{
+                        data: data['2023'].categories,
+                        backgroundColor: ['#b8ff3c', '#7b61ff', '#ff0055', '#00ccff'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+
+        window.updateChart = function (year) {
+            currentYear = year;
+            updateDisplay();
+        };
+
+        window.toggleMetric = function (metric) {
+            currentMetric = metric;
+            updateDisplay();
+        };
+
+        function updateDisplay() {
+            // Update Buttons
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            Array.from(document.querySelectorAll('.control-btn')).find(b => b.innerText === currentYear).classList.add('active');
+            Array.from(document.querySelectorAll('.control-btn')).find(b => b.innerText.toLowerCase() === currentMetric).classList.add('active');
+
+            // Update Line Chart
+            const dataset = data[currentYear][currentMetric];
+            lineChart.data.datasets[0].data = dataset;
+            lineChart.data.datasets[0].label = currentMetric === 'revenue' ? 'Revenue ($)' : 'Orders';
+            lineChart.data.datasets[0].borderColor = currentMetric === 'revenue' ? '#b8ff3c' : '#7b61ff';
+            lineChart.data.datasets[0].backgroundColor = currentMetric === 'revenue' ? 'rgba(184, 255, 60, 0.1)' : 'rgba(123, 97, 255, 0.1)';
+            lineChart.update();
+
+            // Update Pie Chart
+            pieChart.data.datasets[0].data = data[currentYear].categories;
+            pieChart.update();
+
+            // Update Stats
+            const stats = data[currentYear].stats;
+            document.getElementById('total-rev').innerText = stats.total;
+            document.getElementById('total-orders').innerText = stats.orders;
+            document.getElementById('avg-order').innerText = stats.avg;
+            document.getElementById('growth').innerText = stats.growth;
+        }
+
+        document.addEventListener('DOMContentLoaded', initCharts);
+    </script>
+</body>
+
+</html>

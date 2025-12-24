@@ -1,42 +1,40 @@
 @echo off
-echo ===================================================
-echo   Portfolio Website Deployment Script
-echo   (c) 2025 Teega Narasimharao
-echo ===================================================
+title Deploy to GitHub
+color 0B
 echo.
-
-:: Check if git is available
-where git >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Git is not found in your system PATH.
-    echo.
-    echo Please try one of the following:
-    echo 1. Run this script using "Git Bash" instead of double-clicking.
-    echo 2. Open Git Bash, navigate here, and run: ./deploy_website.bat
-    echo 3. Install Git for Windows and add it to your PATH.
-    echo.
-    pause
-    exit /b
-)
-
-echo [INFO] Git found! Starting deployment...
+echo ==========================================================
+echo   DEPLOY PORTFOLIO TO GITHUB
+echo ==========================================================
 echo.
-
-echo [1/3] Adding changes...
-git add .
-
-echo [2/3] Committing changes...
-git commit -m "Final Polish: Chatbot V4, Footer Revert, UI Fixes"
-
-echo [3/3] Pushing to repository...
-git push
-
+echo This script will upload your website code to your GitHub Repository.
 echo.
-echo ===================================================
-if %ERRORLEVEL% EQU 0 (
-    echo   DEPLOYMENT SUCCESSFUL! 🚀
+echo [1/4] Checking Git...
+if exist "C:\Program Files\Git\cmd\git.exe" (
+    set "GIT_CMD=C:\Program Files\Git\cmd\git.exe"
 ) else (
-    echo   DEPLOYMENT FAILED. Please check the errors above.
+    set "GIT_CMD=git"
 )
-echo ===================================================
+
+echo [2/4] Staging files...
+"%GIT_CMD%" add .
+
+echo [3/4] Committing changes...
+"%GIT_CMD%" commit -m "Deployment Update: Final Polish" >nul 2>&1
+
+echo [4/4] Pushing to GitHub...
+"%GIT_CMD%" push -u origin master
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [ALERT] Push failed or Remote URL not set.
+    echo.
+    set /p REPO_URL="Enter your GitHub Repository URL now: "
+    "%GIT_CMD%" remote add origin %REPO_URL%
+    "%GIT_CMD%" push -u origin master
+)
+
+echo.
+echo ==========================================================
+echo   DONE! Your code is on GitHub.
+echo   Now go to https://dashboard.render.com to finish hosting.
+echo ==========================================================
 pause

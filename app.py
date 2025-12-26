@@ -1,9 +1,11 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_compress import Compress
 import os
 
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing for all routes
+Compress(app) # Enable Gzip Compression
 
 from api.ser import ser_bp
 from api.stock import stock_bp

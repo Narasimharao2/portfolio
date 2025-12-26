@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_compress import Compress
 import os
@@ -27,11 +27,11 @@ app.register_blueprint(contact_bp, url_prefix='/api/contact')
 
 @app.route('/')
 def home():
-    return jsonify({
-        "status": "online",
-        "message": "Portfolio AI Backend is Running",
-        "version": "1.0.0"
-    })
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('.', path)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

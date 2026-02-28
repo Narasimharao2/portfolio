@@ -160,6 +160,8 @@
             <span class="tag">Python</span>
             <span class="tag">TensorFlow</span>
           </div>
+          <button class="project-demo-btn" onclick="event.stopPropagation();openProjectModal('ser')">🚀 View
+            Demo</button>
         </div>
       </div>
       <div class="project-card" onclick="openProjectModal('sales')">
@@ -171,6 +173,8 @@
             <span class="tag">Power BI</span>
             <span class="tag">SQL</span>
           </div>
+          <button class="project-demo-btn" onclick="event.stopPropagation();openProjectModal('sales')">🚀 View
+            Demo</button>
         </div>
       </div>
       <div class="project-card" onclick="openProjectModal('fraud')">
@@ -182,6 +186,8 @@
             <span class="tag">Scikit-learn</span>
             <span class="tag">XGBoost</span>
           </div>
+          <button class="project-demo-btn" onclick="event.stopPropagation();openProjectModal('fraud')">🚀 View
+            Demo</button>
         </div>
       </div>
       <div class="project-card" onclick="openProjectModal('customer')">
@@ -193,6 +199,8 @@
             <span class="tag">K-Means</span>
             <span class="tag">Pandas</span>
           </div>
+          <button class="project-demo-btn" onclick="event.stopPropagation();openProjectModal('customer')">🚀 View
+            Demo</button>
         </div>
       </div>
       <div class="project-card" onclick="openProjectModal('webscrape')">
@@ -204,6 +212,8 @@
             <span class="tag">Selenium</span>
             <span class="tag">Soup</span>
           </div>
+          <button class="project-demo-btn" onclick="event.stopPropagation();openProjectModal('webscrape')">🚀 View
+            Demo</button>
         </div>
       </div>
       <div class="project-card" onclick="openProjectModal('stock')">
@@ -215,6 +225,8 @@
             <span class="tag">LSTM</span>
             <span class="tag">Keras</span>
           </div>
+          <button class="project-demo-btn" onclick="event.stopPropagation();openProjectModal('stock')">🚀 View
+            Demo</button>
         </div>
       </div>
     </div>
@@ -394,6 +406,35 @@
             <a href="mailto:teeganarasimharao@gmail.com">teeganarasimharao@gmail.com</a>
           </div>
         </div>
+        <div class="contact-item whatsapp-item">
+          <span class="contact-icon whatsapp-icon">💬</span>
+          <div class="contact-details">
+            <h3>WhatsApp</h3>
+            <a href="https://wa.me/917997181685" target="_blank" class="whatsapp-link">Chat on WhatsApp</a>
+          </div>
+        </div>
+        <div class="contact-item linkedin-item">
+          <span class="contact-icon linkedin-icon">💼</span>
+          <div class="contact-details">
+            <h3>LinkedIn</h3>
+            <a href="https://linkedin.com/in/teeganarasimharao" target="_blank" class="linkedin-link">Connect on
+              LinkedIn</a>
+          </div>
+        </div>
+        <div class="contact-item github-item">
+          <span class="contact-icon github-icon">💻</span>
+          <div class="contact-details">
+            <h3>GitHub</h3>
+            <a href="https://github.com/teeganarasimharao" target="_blank" class="github-link">Follow on GitHub</a>
+          </div>
+        </div>
+        <div class="contact-item twitter-item">
+          <span class="contact-icon twitter-icon">🐦</span>
+          <div class="contact-details">
+            <h3>Twitter</h3>
+            <a href="https://twitter.com/teeganarasimha" target="_blank" class="twitter-link">Follow on Twitter</a>
+          </div>
+        </div>
       </div>
       <form class="contact-form" id="contact-form">
         <div class="form-group">
@@ -494,37 +535,45 @@
     </div>
   </div>
 
-  <!-- Project Detail Modal -->
+  <!-- Project Detail Modal - Premium Full Screen -->
   <div class="project-modal-overlay" id="project-modal">
     <div class="project-modal-container">
-      <button class="modal-close" onclick="closeProjectModal()">×</button>
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-icon" id="modal-icon">🤖</div>
-          <div class="modal-title-group">
-            <h2 id="modal-title">Project Title</h2>
-            <div class="modal-tags" id="modal-tags">
-              <!-- Tags injected here -->
-            </div>
+      <!-- Header Bar -->
+      <div class="pm-header">
+        <div class="pm-header-left">
+          <span class="pm-icon" id="pm-icon">🤖</span>
+          <div>
+            <h2 class="pm-title" id="pm-title">Project Title</h2>
+            <div class="pm-badges" id="pm-badges"></div>
+          </div>
+        </div>
+        <div class="pm-header-right">
+          <a class="pm-fullpage-btn" id="pm-fullpage" target="_blank">↗ Full Page</a>
+          <button class="pm-close-btn" onclick="closeProjectModal()">✕</button>
+        </div>
+      </div>
+
+      <!-- Demo Body -->
+      <div class="pm-body">
+        <!-- Left: Interactive Demo -->
+        <div class="pm-demo-panel">
+          <div class="pm-live-badge">⬤ LIVE DEMO</div>
+          <div class="pm-demo-area" id="pm-demo-area">
+            <!-- Demo HTML injected by JS -->
           </div>
         </div>
 
-        <div class="modal-body">
-          <div class="demo-container" id="demo-container">
-            <!-- Interactive Demo UI injected here -->
-            <div class="start-screen">
-              <button class="btn-primary" id="start-demo-btn">🚀 Launch Demo</button>
-            </div>
-          </div>
+        <!-- Right: Project Details -->
+        <div class="pm-info-panel">
+          <h3 class="pm-info-title" id="pm-info-title">Project Title</h3>
+          <p class="pm-info-desc" id="pm-info-desc">Description loads here.</p>
 
-          <div class="project-details-text">
-            <h3>About this Project</h3>
-            <p id="modal-description">Project description goes here...</p>
+          <div class="pm-metrics" id="pm-metrics"></div>
 
-            <div class="modal-links">
-              <a href="#" class="btn-secondary" id="modal-github">View Code</a>
-              <a href="#" class="btn-primary" id="modal-live">Live Preview</a>
-            </div>
+          <div class="pm-tech-stack" id="pm-tech-stack"></div>
+
+          <div class="pm-actions">
+            <a class="pm-btn-primary" id="pm-view-full" target="_blank">🚀 View Full Demo</a>
           </div>
         </div>
       </div>

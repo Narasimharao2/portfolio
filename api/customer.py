@@ -1,13 +1,21 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
+from api.utils import api_response, log_api_call
 import time
 
 customer_bp = Blueprint('customer', __name__)
 
 @customer_bp.route('/predict', methods=['POST'])
+@log_api_call
 def predict_segment():
     data = request.json
-    income = int(data.get('income', 50))
-    score = int(data.get('score', 50))
+    if not data:
+        return api_response(status="error", message="Missing request data", code=400)
+
+    try:
+        income = int(data.get('income', 50))
+        score = int(data.get('score', 50))
+    except (ValueError, TypeError):
+        return api_response(status="error", message="Income and Score must be integers", code=400)
     
     time.sleep(0.5)
     
@@ -24,8 +32,10 @@ def predict_segment():
         cluster = "Loyal Saver"
         description = "Low income but high engagement. Target with discounts."
         
-    return jsonify({
+    data = {
         "segment": cluster,
         "description": description,
         "coordinates": {"x": score, "y": income}
-    })
+    }
+
+    return api_response(data=data)

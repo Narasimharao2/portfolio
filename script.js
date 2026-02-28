@@ -122,9 +122,9 @@ if (contactForm) {
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Server Error");
+      if (result.status !== 'success' && !response.ok) throw new Error(result.message || "Server Error");
 
       // 3. Success State
       submitButton.innerHTML = '<span>✅ Message Sent!</span>';
@@ -132,7 +132,7 @@ if (contactForm) {
       submitButton.style.color = '#000';
 
       // Show Simulation Alert if applicable
-      if (data.mode === 'simulation') {
+      if (result.mode === 'simulation' || (result.data && result.data.mode === 'simulation')) {
         alert('Test Mode: Message received by backend simulation! (No real email sent)');
       }
 
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
       headerActions.insertBefore(voiceBtn, headerActions.firstChild);
     }
 
-    chatWindow.classList.add('active');
+    chatWindow.classList.toggle('active');
     if (chatWindow.classList.contains('active')) {
       chatNotification.style.display = 'none';
       if (chatMessages.children.length === 0) {
@@ -1091,49 +1091,696 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(init3DGlobe, 500); // Small delay to ensure layout
 });
 
-// Project Modal / Page Navigation Handler
-window.openProjectModal = function (projectId) {
-  // Redirect specific projects to their new dedicated pages
-  const projectMap = {
-    'ser': 'project-ser.html',
-    'sales': 'project-sales.html',
-    'fraud': 'project-fraud.html',
-    'customer': 'project-customer.html',
-    'webscrape': 'project-webscrape.html',
-    'stock': 'project-stock.html'
-  };
+// ================================================
+// PREMIUM PROJECT DEMO MODAL — INLINE DEMO ENGINE
+// ================================================
 
-  if (projectMap[projectId]) {
-    window.location.href = projectMap[projectId];
-    return;
-  }
+// Shared state for cleanup
+let _pmCharts = [];
+let _pmIntervals = [];
+let _pmAnimation = null;
+let _pmAudioCtx = null;
+let _pmAudioSource = null;
 
-  // Legacy Modal Handling for projects not yet upgraded
-  const modal = document.getElementById('project-modal');
-  if (modal) {
-    const title = document.getElementById('modal-title');
-    const desc = document.getElementById('modal-description');
+function _pmCleanup() {
+  // Destroy Chart.js instances
+  _pmCharts.forEach(c => { try { c.destroy(); } catch (e) { } });
+  _pmCharts = [];
+  // Clear intervals/timeouts
+  _pmIntervals.forEach(id => clearInterval(id));
+  _pmIntervals = [];
+  if (_pmAnimation) { cancelAnimationFrame(_pmAnimation); _pmAnimation = null; }
+  // Release audio
+  if (_pmAudioCtx) { try { _pmAudioCtx.close(); } catch (e) { } _pmAudioCtx = null; }
+}
 
-    // Simple data mapping for legacy modal
-    const projectData = {
-      'sales': { title: 'Sales Analytics', desc: 'Interactive Power BI dashboard for real-time sales tracking.' },
-      'fraud': { title: 'Fraud Detection', desc: 'ML model to detect fraudulent transactions.' },
-      'customer': { title: 'Customer Segmentation', desc: 'Clustering analysis for marketing.' },
-      'webscrape': { title: 'Web Scraping Tool', desc: 'Automated data collection system.' },
-      'stock': { title: 'Stock Predictor', desc: 'LSTM model for price prediction.' }
-    };
+// ESC to close
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeProjectModal();
+});
 
-    if (projectData[projectId]) {
-      if (title) title.textContent = projectData[projectId].title;
-      if (desc) desc.textContent = projectData[projectId].desc;
-      modal.classList.add('active');
+// Project data registry
+const PROJECT_REGISTRY = {
+  ser: {
+    icon: '🤖', title: 'Speech Emotion Recognition',
+    badges: ['Python', 'TensorFlow', 'Librosa'],
+    pageUrl: 'project-ser.html',
+    info: {
+      title: 'About this Project',
+      desc: 'Deep learning CNN+LSTM model that detects human emotions from raw audio signals. Trained on RAVDESS & TESS datasets with MFCC feature extraction, achieving 92% accuracy.',
+      metrics: [
+        { val: '92%', lbl: 'Accuracy' },
+        { val: '6', lbl: 'Emotions' },
+        { val: '40ms', lbl: 'Latency' },
+        { val: '500+', lbl: 'Streams' }
+      ],
+      tech: ['Python', 'TensorFlow', 'Keras', 'Librosa', 'NumPy', 'Matplotlib']
+    },
+    buildDemo(area) {
+      area.innerHTML = `
+        <div class="pm-visualizer" id="pm-viz"></div>
+        <div style="display:flex;gap:.8rem;justify-content:center;margin-bottom:1rem;">
+          <button class="pm-ctrl-btn" id="pm-rec-btn">🎙️ Record Audio</button>
+          <button class="pm-ctrl-btn" id="pm-upload-btn">📁 Use Sample Clip</button>
+        </div>
+        <div class="pm-emotion-result" id="pm-emotion-result">
+          <span id="pm-emotion-text">— Waiting for audio —</span>
+        </div>`;
+
+      // Build waveform bars
+      const viz = document.getElementById('pm-viz');
+      const bars = [];
+      for (let i = 0; i < 36; i++) {
+        const b = document.createElement('div');
+        b.className = 'pm-wave-bar';
+        viz.appendChild(b);
+        bars.push(b);
+      }
+
+      let isRecording = false;
+      let analyser, sourceNode, stream;
+
+      const recBtn = document.getElementById('pm-rec-btn');
+      const uploadBtn = document.getElementById('pm-upload-btn');
+      const resultBox = document.getElementById('pm-emotion-result');
+      const emotionText = document.getElementById('pm-emotion-text');
+
+      const EMOTIONS = [
+        { text: 'Happy', icon: '😊', conf: 96 },
+        { text: 'Neutral', icon: '😐', conf: 88 },
+        { text: 'Energetic', icon: '⚡', conf: 92 },
+        { text: 'Calm', icon: '😌', conf: 94 },
+        { text: 'Angry', icon: '😠', conf: 85 },
+        { text: 'Sad', icon: '😢', conf: 79 }
+      ];
+
+      function stopRecording() {
+        isRecording = false;
+        if (_pmAudioCtx) { _pmAudioCtx.close(); _pmAudioCtx = null; }
+        if (stream) { stream.getTracks().forEach(t => t.stop()); }
+        cancelAnimationFrame(_pmAnimation); _pmAnimation = null;
+        bars.forEach(b => { b.classList.remove('recording'); b.style.height = '10px'; });
+        recBtn.textContent = '🎙️ Record Again';
+        const e = EMOTIONS[Math.floor(Math.random() * EMOTIONS.length)];
+        emotionText.innerHTML = `${e.icon} ${e.text} &nbsp;<span style="color:#888;font-size:.9rem">(${e.conf}% confidence)</span>`;
+        resultBox.classList.add('visible');
+      }
+
+      function animateBars() {
+        if (!isRecording || !analyser) return;
+        _pmAnimation = requestAnimationFrame(animateBars);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+        const step = Math.floor(data.length / bars.length);
+        bars.forEach((b, i) => {
+          const h = Math.max(6, (data[i * step] / 255) * 100);
+          b.style.height = h + 'px';
+          b.style.background = data[i * step] > 180 ? '#ff0055' : '#b8ff3c';
+        });
+      }
+
+      recBtn.addEventListener('click', async () => {
+        if (isRecording) { stopRecording(); return; }
+        resultBox.classList.remove('visible');
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          _pmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = _pmAudioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          sourceNode = _pmAudioCtx.createMediaStreamSource(stream);
+          sourceNode.connect(analyser);
+          isRecording = true;
+          bars.forEach(b => b.classList.add('recording'));
+          recBtn.textContent = '⏹️ Stop Recording';
+          animateBars();
+          // Auto-stop after 4s
+          setTimeout(() => { if (isRecording) stopRecording(); }, 4000);
+        } catch (err) {
+          // mic denied — use simulation
+          bars.forEach(b => b.classList.add('recording'));
+          recBtn.textContent = '⏹️ Stop Recording';
+          isRecording = true;
+          setTimeout(() => { if (isRecording) stopRecording(); }, 3000);
+        }
+      });
+
+      uploadBtn.addEventListener('click', () => {
+        if (isRecording) { stopRecording(); return; }
+        resultBox.classList.remove('visible');
+        bars.forEach(b => { b.classList.add('recording'); b.style.height = '10px'; });
+        setTimeout(() => {
+          bars.forEach(b => b.classList.remove('recording'));
+          const e = EMOTIONS[Math.floor(Math.random() * EMOTIONS.length)];
+          emotionText.innerHTML = `${e.icon} ${e.text} &nbsp;<span style="color:#888;font-size:.9rem">(${e.conf}% confidence)</span>`;
+          resultBox.classList.add('visible');
+        }, 2500);
+      });
+    }
+  },
+
+  sales: {
+    icon: '📊', title: 'Sales Analytics Dashboard',
+    badges: ['Power BI', 'SQL', 'DAX'],
+    pageUrl: 'project-sales.html',
+    info: {
+      title: 'About this Project',
+      desc: 'Interactive BI dashboard transforming raw sales data into real-time KPIs. Helped identify 15% revenue growth opportunities and saved 20+ hours/week of manual reporting.',
+      metrics: [
+        { val: '$1.8M', lbl: 'Revenue (2024)' },
+        { val: '+22%', lbl: 'YoY Growth' },
+        { val: '6.1k', lbl: 'Orders' },
+        { val: '20+', lbl: 'Hrs Saved/Wk' }
+      ],
+      tech: ['Power BI', 'SQL', 'DAX', 'Data Warehousing', 'Excel', 'Python']
+    },
+    buildDemo(area) {
+      area.innerHTML = `
+        <div class="pm-stats-row">
+          <div class="pm-stat"><div class="pm-stat-val" id="ps-rev">$1.2M</div><div class="pm-stat-lbl">Revenue</div></div>
+          <div class="pm-stat"><div class="pm-stat-val" id="ps-ord">5,432</div><div class="pm-stat-lbl">Orders</div></div>
+          <div class="pm-stat"><div class="pm-stat-val" id="ps-avg">$220</div><div class="pm-stat-lbl">Avg Value</div></div>
+          <div class="pm-stat"><div class="pm-stat-val" id="ps-grw">+15%</div><div class="pm-stat-lbl">Growth</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
+          <div class="pm-chart-wrap" style="height:220px;margin:0;"><canvas id="pm-line-chart"></canvas></div>
+          <div class="pm-chart-wrap" style="height:220px;margin:0;"><canvas id="pm-pie-chart"></canvas></div>
+        </div>
+        <div class="pm-controls" style="margin-top:.8rem;">
+          <button class="pm-ctrl-btn active" data-year="2023" onclick="pmSalesYear(this,'2023')">2023</button>
+          <button class="pm-ctrl-btn" data-year="2024" onclick="pmSalesYear(this,'2024')">2024</button>
+          <button class="pm-ctrl-btn active" data-metric="revenue" onclick="pmSalesMetric(this,'revenue')">Revenue</button>
+          <button class="pm-ctrl-btn" data-metric="orders" onclick="pmSalesMetric(this,'orders')">Orders</button>
+        </div>`;
+
+      const salesData = {
+        '2023': { revenue: [12, 19, 3, 5, 2, 3, 15, 21, 18, 25, 29, 32], orders: [120, 190, 30, 50, 20, 30, 150, 210, 180, 250, 290, 320], cats: [30, 20, 15, 35], stats: { rev: '$1.2M', ord: '5,432', avg: '$220', grw: '+15%' } },
+        '2024': { revenue: [15, 22, 6, 8, 5, 6, 18, 25, 22, 28, 34, 38], orders: [150, 220, 60, 80, 50, 60, 180, 250, 220, 280, 340, 380], cats: [40, 25, 10, 25], stats: { rev: '$1.8M', ord: '6,100', avg: '$295', grw: '+22%' } }
+      };
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      let curYear = '2023', curMetric = 'revenue';
+
+      const lineCtx = document.getElementById('pm-line-chart').getContext('2d');
+      const pieCtx = document.getElementById('pm-pie-chart').getContext('2d');
+
+      const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#ccc', boxWidth: 10 } } } };
+
+      const lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [{ label: 'Revenue (k$)', data: salesData['2023'].revenue, borderColor: '#b8ff3c', backgroundColor: 'rgba(184,255,60,.08)', tension: .4, fill: true }]
+        },
+        options: { ...commonOpts, scales: { x: { grid: { color: 'rgba(255,255,255,.07)' }, ticks: { color: '#888', font: { size: 9 } } }, y: { grid: { color: 'rgba(255,255,255,.07)' }, ticks: { color: '#888', font: { size: 9 } } } } }
+      });
+      const pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Electronics', 'Fashion', 'Home', 'Sports'],
+          datasets: [{ data: salesData['2023'].cats, backgroundColor: ['#b8ff3c', '#7b61ff', '#ff0055', '#00ccff'], borderWidth: 0 }]
+        },
+        options: { ...commonOpts, plugins: { legend: { position: 'bottom', labels: { color: '#ccc', boxWidth: 10, font: { size: 9 } } } } }
+      });
+      _pmCharts.push(lineChart, pieChart);
+
+      function updateSales() {
+        const d = salesData[curYear];
+        lineChart.data.datasets[0].data = d[curMetric];
+        lineChart.data.datasets[0].label = curMetric === 'revenue' ? 'Revenue (k$)' : 'Orders';
+        lineChart.data.datasets[0].borderColor = curMetric === 'revenue' ? '#b8ff3c' : '#7b61ff';
+        lineChart.data.datasets[0].backgroundColor = curMetric === 'revenue' ? 'rgba(184,255,60,.08)' : 'rgba(123,97,255,.08)';
+        lineChart.update();
+        pieChart.data.datasets[0].data = d.cats;
+        pieChart.update();
+        document.getElementById('ps-rev').textContent = d.stats.rev;
+        document.getElementById('ps-ord').textContent = d.stats.ord;
+        document.getElementById('ps-avg').textContent = d.stats.avg;
+        document.getElementById('ps-grw').textContent = d.stats.grw;
+      }
+
+      window.pmSalesYear = (btn, year) => {
+        curYear = year;
+        document.querySelectorAll('[data-year]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateSales();
+      };
+      window.pmSalesMetric = (btn, metric) => {
+        curMetric = metric;
+        document.querySelectorAll('[data-metric]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateSales();
+      };
+    }
+  },
+
+  fraud: {
+    icon: '🔍', title: 'Fraud Detection System',
+    badges: ['Scikit-learn', 'XGBoost', 'SMOTE'],
+    pageUrl: 'project-fraud.html',
+    info: {
+      title: 'About this Project',
+      desc: 'Random Forest + XGBoost ensemble trained on 280,000+ transactions. Uses SMOTE to handle class imbalance, achieving 98.5% precision with <50ms API latency.',
+      metrics: [
+        { val: '98.5%', lbl: 'Precision' },
+        { val: '0.2%', lbl: 'False Positives' },
+        { val: '<50ms', lbl: 'API Latency' },
+        { val: '280k+', lbl: 'Training Records' }
+      ],
+      tech: ['Python', 'Scikit-learn', 'XGBoost', 'Pandas', 'SMOTE', 'FastAPI', 'Docker']
+    },
+    buildDemo(area) {
+      area.innerHTML = `
+        <div class="pm-fraud-grid">
+          <div class="pm-form-group">
+            <label>Transaction Amount ($)</label>
+            <input type="number" class="pm-input" id="pf-amount" placeholder="e.g. 5000" min="0">
+          </div>
+          <div class="pm-form-group">
+            <label>Location</label>
+            <select class="pm-select" id="pf-location">
+              <option value="us">United States (Home)</option>
+              <option value="uk">United Kingdom</option>
+              <option value="ng">Nigeria</option>
+              <option value="ru">Russia</option>
+              <option value="cn">China</option>
+            </select>
+          </div>
+        </div>
+        <div class="pm-form-group" style="margin-bottom:.8rem;">
+          <label>Merchant Category</label>
+          <select class="pm-select" id="pf-category">
+            <option value="retail">Retail / Groceries</option>
+            <option value="tech">Electronics</option>
+            <option value="jewelry">Luxury / Jewelry</option>
+            <option value="gaming">Online Gaming</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:.6rem;">
+          <button class="pm-submit-btn" style="flex:2" onclick="pmFraudAnalyze()">🔍 Analyze Transaction</button>
+          <button class="pm-ctrl-btn" style="flex:1" onclick="pmFraudSample()">⚠️ Sample Fraud</button>
+        </div>
+        <div class="pm-result-panel" id="pf-result"></div>`;
+
+      window.pmFraudSample = () => {
+        document.getElementById('pf-amount').value = 12500;
+        document.getElementById('pf-location').value = 'ru';
+        document.getElementById('pf-category').value = 'jewelry';
+      };
+
+      window.pmFraudAnalyze = () => {
+        const amount = parseFloat(document.getElementById('pf-amount').value) || 0;
+        const loc = document.getElementById('pf-location').value;
+        const cat = document.getElementById('pf-category').value;
+        const result = document.getElementById('pf-result');
+        result.classList.remove('visible', 'pm-risk-safe', 'pm-risk-danger');
+
+        let risk = 0, factors = [];
+        if (amount > 10000) { risk += 40; factors.push('High Transaction Value'); }
+        else if (amount > 5000) { risk += 20; }
+        if (loc !== 'us' && loc !== 'uk') { risk += 35; factors.push('High-Risk Geo-Location'); }
+        if (cat === 'jewelry' || cat === 'gaming') { risk += 25; factors.push('High-Risk Merchant Category'); }
+        risk = Math.min(100, risk);
+        const isFraud = risk >= 50;
+
+        setTimeout(() => {
+          result.className = 'pm-result-panel visible ' + (isFraud ? 'pm-risk-danger' : 'pm-risk-safe');
+          result.innerHTML = isFraud
+            ? `<div style="font-size:1.3rem;font-weight:800">⚠️ HIGH RISK DETECTED</div>
+               <div style="font-size:1.8rem;font-weight:900;margin:.4rem 0">Risk Score: ${risk}/100</div>
+               <div style="font-size:.85rem;opacity:.8">Flags: ${factors.join(' · ')}</div>
+               <div style="margin-top:.5rem;font-weight:700">🚫 BLOCK TRANSACTION</div>`
+            : `<div style="font-size:1.3rem;font-weight:800">✅ TRANSACTION SAFE</div>
+               <div style="font-size:1.8rem;font-weight:900;margin:.4rem 0">Risk Score: ${risk}/100</div>
+               <div style="font-size:.85rem;opacity:.8">All parameters within normal range</div>
+               <div style="margin-top:.5rem;font-weight:700">✔️ APPROVE</div>`;
+        }, 900);
+      };
+    }
+  },
+
+  customer: {
+    icon: '🎯', title: 'Customer Segmentation',
+    badges: ['K-Means', 'Pandas', 'Seaborn'],
+    pageUrl: 'project-customer.html',
+    info: {
+      title: 'About this Project',
+      desc: 'K-Means clustering with RFM (Recency, Frequency, Monetary) feature engineering to segment customers into 4 behavioral groups, boosting campaign conversions by 25%.',
+      metrics: [
+        { val: '+25%', lbl: 'Conversions' },
+        { val: '4', lbl: 'Segments' },
+        { val: '0.83', lbl: 'Silhouette' },
+        { val: '15k+', lbl: 'Customers' }
+      ],
+      tech: ['Python', 'Scikit-learn', 'Pandas', 'Matplotlib', 'Seaborn', 'Elbow Method']
+    },
+    buildDemo(area) {
+      area.innerHTML = `
+        <div class="pm-cluster-legend">
+          <div class="pm-legend-item"><span class="pm-legend-dot" style="background:#ff6384"></span>VIP (High Spenders)</div>
+          <div class="pm-legend-item"><span class="pm-legend-dot" style="background:#36a2eb"></span>Loyal Savers</div>
+          <div class="pm-legend-item"><span class="pm-legend-dot" style="background:#ffce56"></span>New Customers</div>
+          <div class="pm-legend-item"><span class="pm-legend-dot" style="background:#4bc0c0"></span>At Risk</div>
+        </div>
+        <div class="pm-chart-wrap" style="height:230px;"><canvas id="pm-scatter-chart"></canvas></div>
+        <div style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap;margin-top:.8rem;">
+          <div style="flex:1;min-width:100px;">
+            <label style="font-size:.8rem;color:#999;display:block;margin-bottom:.3rem">Annual Income (k$)</label>
+            <input type="number" class="pm-input" id="pc-income" placeholder="10–100" min="10" max="100">
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <label style="font-size:.8rem;color:#999;display:block;margin-bottom:.3rem">Spending Score (1–100)</label>
+            <input type="number" class="pm-input" id="pc-score" placeholder="1–100" min="1" max="100">
+          </div>
+          <button class="pm-submit-btn" style="flex:1;min-width:100px;" onclick="pmCustomerPredict()">Predict Segment</button>
+        </div>
+        <div class="pm-result-panel pm-risk-safe" id="pc-result"></div>`;
+
+      function genCluster(n, xR, yR) {
+        return Array.from({ length: n }, () => ({
+          x: Math.random() * (xR[1] - xR[0]) + xR[0],
+          y: Math.random() * (yR[1] - yR[0]) + yR[0]
+        }));
+      }
+
+      const ctx = document.getElementById('pm-scatter-chart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            { label: 'VIP', data: genCluster(25, [70, 100], [70, 100]), backgroundColor: '#ff6384', pointRadius: 5 },
+            { label: 'Loyal', data: genCluster(35, [40, 70], [40, 70]), backgroundColor: '#36a2eb', pointRadius: 5 },
+            { label: 'New', data: genCluster(40, [10, 40], [10, 50]), backgroundColor: '#ffce56', pointRadius: 5 },
+            { label: 'At Risk', data: genCluster(20, [60, 90], [10, 40]), backgroundColor: '#4bc0c0', pointRadius: 5 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.dataset.label}: (${c.parsed.x.toFixed(0)}, ${c.parsed.y.toFixed(0)}k)` } } },
+          scales: {
+            x: { title: { display: true, text: 'Spending Score', color: '#888', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.07)' }, ticks: { color: '#888', font: { size: 9 } }, min: 0, max: 100 },
+            y: { title: { display: true, text: 'Annual Income (k$)', color: '#888', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.07)' }, ticks: { color: '#888', font: { size: 9 } }, min: 0, max: 120 }
+          }
+        }
+      });
+      _pmCharts.push(chart);
+
+      window.pmCustomerPredict = () => {
+        const income = parseInt(document.getElementById('pc-income').value);
+        const score = parseInt(document.getElementById('pc-score').value);
+        if (!income || !score) return;
+        let label = 'New Customer';
+        if (income > 60 && score > 60) label = 'VIP 👑';
+        else if (income > 35 && score > 35 && score < 75) label = 'Loyal Saver 💙';
+        else if (income > 50 && score < 40) label = 'At Risk ⚠️';
+
+        chart.data.datasets = chart.data.datasets.filter(d => d.label !== 'Your Customer');
+        chart.data.datasets.push({
+          label: 'Your Customer', data: [{ x: score, y: income }],
+          backgroundColor: '#fff', pointRadius: 10, pointStyle: 'star'
+        });
+        chart.update();
+        const res = document.getElementById('pc-result');
+        res.innerHTML = `<strong>Predicted Segment:</strong> ${label}`;
+        res.classList.add('visible');
+      };
+    }
+  },
+
+  webscrape: {
+    icon: '🌐', title: 'Automated Web Scraper',
+    badges: ['Selenium', 'BeautifulSoup', 'Python'],
+    pageUrl: 'project-webscrape.html',
+    info: {
+      title: 'About this Project',
+      desc: 'High-performance data extraction engine using Selenium + Beautiful Soup. Features rotating proxies, CAPTCHA evasion, async processing, and exports clean JSON/CSV.',
+      metrics: [
+        { val: '90%', lbl: 'Manual Work Cut' },
+        { val: '100k+', lbl: 'Products/Day' },
+        { val: '0', lbl: 'IP Bans' },
+        { val: '192', lbl: 'Items/Run' }
+      ],
+      tech: ['Python', 'Selenium', 'Beautiful Soup', 'Requests', 'JSON', 'CSV', 'Proxies']
+    },
+    buildDemo(area) {
+      area.innerHTML = `
+        <div class="pm-terminal">
+          <div class="pm-term-header">
+            <span class="pm-term-dot" style="background:#ff5f56"></span>
+            <span class="pm-term-dot" style="background:#ffbd2e"></span>
+            <span class="pm-term-dot" style="background:#27c93f"></span>
+            <span style="margin-left:8px;font-size:.75rem;color:#666">scraper_bot.py</span>
+          </div>
+          <div class="pm-term-body" id="pw-terminal">
+            <div><span class="pm-term-prompt">teega@portfolio:~/scraper$</span> <span id="pw-cursor">_</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:.8rem;">
+          <button class="pm-ctrl-btn" id="pw-run" onclick="pmScrapeRun()" style="flex:2">▶ Run Scraper</button>
+          <button class="pm-ctrl-btn" onclick="pmScrapeClear()" style="flex:1">Clear</button>
+        </div>`;
+
+      const LOGS = [
+        { t: 'info', m: '[INFO] Initializing Chrome WebDriver (Headless v114)...' },
+        { t: 'info', m: '[INFO] Spoofing User-Agent & rotating proxy...' },
+        { t: 'info', m: '[INFO] Target → https://example-store.com/new-arrivals' },
+        { t: 'success', m: '[SUCCESS] Connected (200 OK)' },
+        { t: 'info', m: '[INFO] Parsing DOM tree...' },
+        { t: 'warn', m: '[DATA] Found 142 product nodes.' },
+        { t: 'data', m: '   > [1] Wireless Noise-Cancelling Headphones — $299' },
+        { t: 'data', m: '   > [2] Mechanical Gaming Keyboard RGB — $129' },
+        { t: 'data', m: '   > [3] 4K Ultra HD Monitor 27" — $450' },
+        { t: 'data', m: '   > [4] Smart Home Hub v2 — $89' },
+        { t: 'data', m: '   > [5] Ergonomic Office Chair Pro — $350' },
+        { t: 'info', m: '   ... (scrolling 137 more items)' },
+        { t: 'warn', m: '[INFO] Handling pagination — Page 2 loaded' },
+        { t: 'info', m: '[INFO] Rate-limit safeguard: sleep 0.5s' },
+        { t: 'success', m: '[SUCCESS] Extracted 50 items from Page 2.' },
+        { t: 'info', m: '[INFO] Aggregating results...' },
+        { t: 'success', m: '[SUCCESS] Pipeline complete — 192 items scraped.' },
+        { t: 'info', m: '[INFO] Saving to output.csv...' },
+        { t: 'success', m: '✅ DONE — output.csv saved (14 KB)' }
+      ];
+
+      let isRunning = false;
+
+      window.pmScrapeRun = () => {
+        if (isRunning) return;
+        isRunning = true;
+        const term = document.getElementById('pw-terminal');
+        const cursor = document.getElementById('pw-cursor');
+        if (cursor) cursor.remove();
+
+        const cmdLine = document.createElement('div');
+        cmdLine.innerHTML = `<span class="pm-term-prompt">teega@portfolio:~/scraper$</span> python scraper.py --target=store --format=csv`;
+        term.appendChild(cmdLine);
+
+        LOGS.forEach((log, i) => {
+          const id = setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'pm-term-' + log.t;
+            el.textContent = log.m;
+            term.appendChild(el);
+            term.scrollTop = term.scrollHeight;
+            if (i === LOGS.length - 1) {
+              const dlBtn = document.createElement('div');
+              dlBtn.style.marginTop = '8px';
+              dlBtn.innerHTML = `<button onclick="pmScrapeDownload()" style="background:#27c93f;color:#000;border:none;padding:4px 10px;font-family:'JetBrains Mono';cursor:pointer;font-weight:bold;border-radius:4px">⬇ Download output.csv (14KB)</button>`;
+              term.appendChild(dlBtn);
+              term.scrollTop = term.scrollHeight;
+              isRunning = false;
+            }
+          }, i * 200 + 100);
+          _pmIntervals.push(id);
+        });
+      };
+
+      window.pmScrapeClear = () => {
+        isRunning = false;
+        const term = document.getElementById('pw-terminal');
+        if (term) term.innerHTML = `<div><span class="pm-term-prompt">teega@portfolio:~/scraper$</span> <span id="pw-cursor">_</span></div>`;
+      };
+
+      window.pmScrapeDownload = () => {
+        const csv = 'ID,Product,Price\n1,Wireless Headphones,299\n2,Gaming Keyboard,129\n3,4K Monitor,450\n4,Smart Home Hub,89\n5,Office Chair,350';
+        const a = document.createElement('a');
+        a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+        a.download = 'scraped_data_sample.csv';
+        a.click();
+      };
+    }
+  },
+
+  stock: {
+    icon: '📈', title: 'Stock Price Predictor',
+    badges: ['LSTM', 'Keras', 'yfinance'],
+    pageUrl: 'project-stock.html',
+    info: {
+      title: 'About this Project',
+      desc: 'LSTM deep learning model with a 60-day lookback window for stock trend forecasting. Achieves RMSE of 2.34 — outperforming ARIMA by 12%. Includes portfolio optimization module.',
+      metrics: [
+        { val: '2.34', lbl: 'RMSE' },
+        { val: '60', lbl: 'Day Lookback' },
+        { val: '+12%', lbl: 'vs ARIMA' },
+        { val: '4', lbl: 'Tickers' }
+      ],
+      tech: ['Python', 'TensorFlow / Keras', 'NumPy', 'yfinance API', 'Plotly', 'Streamlit']
+    },
+    buildDemo(area) {
+      area.innerHTML = `
+        <div class="pm-chart-wrap" style="height:240px;"><canvas id="pm-stock-chart"></canvas></div>
+        <div class="pm-ticker-row">
+          <select class="pm-ticker-select" id="ps-ticker">
+            <option value="AAPL">AAPL (Apple)</option>
+            <option value="TSLA">TSLA (Tesla)</option>
+            <option value="GOOGL">GOOGL (Google)</option>
+            <option value="BTC">BTC-USD (Bitcoin)</option>
+          </select>
+          <button class="pm-predict-btn" id="ps-predict-btn" onclick="pmStockPredict()">Predict Trend 📈</button>
+        </div>
+        <div class="pm-train-log" id="ps-train-log">
+          <span id="ps-train-text">&gt; Initializing...</span>
+          <div class="pm-train-bar-wrap"><div class="pm-train-bar" id="ps-train-bar"></div></div>
+        </div>`;
+
+      const STOCK = {
+        AAPL: { history: [145, 147, 146, 148, 150, 149, 151, 153, 152, 154, 155, 157, 156, 158, 160], forecast: [162, 161, 163, 165, 164, 166, 168] },
+        TSLA: { history: [220, 215, 230, 225, 240, 235, 250, 245, 260, 255, 240, 245, 250, 255, 260], forecast: [265, 275, 255, 270, 280, 260, 290] },
+        GOOGL: { history: [120, 121, 122, 122, 123, 123, 124, 125, 125, 126, 127, 128, 129, 130, 131], forecast: [131, 132, 132, 133, 133, 134, 135] },
+        BTC: { history: [30000, 31000, 29000, 32000, 31500, 33000, 34000, 32500, 35000, 36000, 34000, 37000, 38000, 37500, 40000], forecast: [41000, 39000, 42000, 44000, 43000, 45000, 48000] }
+      };
+      const histLabels = Array.from({ length: 15 }, (_, i) => `Day ${i - 14}`);
+
+      const ctx = document.getElementById('pm-stock-chart').getContext('2d');
+      let chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: histLabels,
+          datasets: [{ label: 'Historical Price', data: STOCK.AAPL.history, borderColor: '#fff', borderWidth: 2, tension: .2, pointRadius: 2 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#ccc', boxWidth: 12, font: { size: 10 } } } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,.07)' }, ticks: { color: '#888', font: { size: 9 } } },
+            y: { grid: { color: 'rgba(255,255,255,.07)' }, ticks: { color: '#888', font: { size: 9 } } }
+          }
+        }
+      });
+      _pmCharts.push(chart);
+
+      document.getElementById('ps-ticker').addEventListener('change', () => {
+        const ticker = document.getElementById('ps-ticker').value;
+        chart.data.labels = histLabels;
+        chart.data.datasets = [{ label: `Historical (${ticker})`, data: STOCK[ticker].history, borderColor: '#fff', borderWidth: 2, tension: .2, pointRadius: 2 }];
+        chart.update();
+        const btn = document.getElementById('ps-predict-btn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Predict Trend 📈'; }
+        const log = document.getElementById('ps-train-log');
+        if (log) log.style.display = 'none';
+      });
+
+      window.pmStockPredict = async () => {
+        const btn = document.getElementById('ps-predict-btn');
+        const log = document.getElementById('ps-train-log');
+        const trainText = document.getElementById('ps-train-text');
+        const trainBar = document.getElementById('ps-train-bar');
+        const ticker = document.getElementById('ps-ticker').value;
+
+        btn.disabled = true;
+        log.style.display = 'block';
+        trainBar.style.width = '0%';
+
+        const STEPS = [
+          'Initializing TensorFlow Core...',
+          'Loading pre-trained weights (v4.2)...',
+          'Normalizing input tensors...',
+          'Epoch 1/5: loss=0.4322  acc=0.65',
+          'Epoch 3/5: loss=0.2110  acc=0.82',
+          'Epoch 5/5: loss=0.0544  acc=0.96',
+          'Finalizing predictions...'
+        ];
+        for (let i = 0; i < STEPS.length; i++) {
+          await new Promise(r => setTimeout(r, 280));
+          trainText.textContent = '> ' + STEPS[i];
+          trainBar.style.width = ((i + 1) / STEPS.length * 100) + '%';
+        }
+
+        log.style.display = 'none';
+        btn.textContent = 'Prediction Complete!';
+
+        const d = STOCK[ticker];
+        const last = d.history[d.history.length - 1];
+        const forecastLabels = Array.from({ length: 7 }, (_, i) => `Day +${i + 1}`);
+        const allLabels = [...histLabels, ...forecastLabels];
+        const histPadded = [...d.history, ...Array(7).fill(null)];
+        const forecastPadded = [...Array(14).fill(null), last, ...d.forecast];
+
+        chart.data.labels = allLabels;
+        chart.data.datasets = [
+          { label: `Historical (${ticker})`, data: histPadded, borderColor: '#fff', borderWidth: 2, tension: .2, pointRadius: 2 },
+          { label: 'LSTM Forecast', data: forecastPadded, borderColor: '#b8ff3c', borderWidth: 2, borderDash: [5, 5], tension: .3, pointRadius: 4, pointBackgroundColor: '#b8ff3c' }
+        ];
+        chart.update();
+
+        setTimeout(() => { btn.disabled = false; btn.textContent = 'Predict Trend 📈'; }, 3000);
+      };
     }
   }
 };
 
-window.closeProjectModal = function () {
-  const modal = document.getElementById('project-modal');
-  if (modal) {
-    modal.classList.remove('active');
+// Populate the right info panel
+function _pmPopulateInfo(key) {
+  const p = PROJECT_REGISTRY[key];
+  if (!p) return;
+  const d = p.info;
+
+  // Header
+  document.getElementById('pm-icon').textContent = p.icon;
+  document.getElementById('pm-title').textContent = p.title;
+  const badgesEl = document.getElementById('pm-badges');
+  badgesEl.innerHTML = p.badges.map(b => `<span class="pm-badge">${b}</span>`).join('');
+
+  // Full page link
+  document.getElementById('pm-fullpage').href = p.pageUrl;
+  document.getElementById('pm-view-full').href = p.pageUrl;
+
+  // Info panel
+  document.getElementById('pm-info-title').textContent = d.title;
+  document.getElementById('pm-info-desc').textContent = d.desc;
+
+  // Metrics
+  document.getElementById('pm-metrics').innerHTML = d.metrics.map(m =>
+    `<div class="pm-metric-box"><span class="pm-metric-val">${m.val}</span><div class="pm-metric-lbl">${m.lbl}</div></div>`
+  ).join('');
+
+  // Tech stack
+  document.getElementById('pm-tech-stack').innerHTML = d.tech.map(t => `<span class="pm-tech">${t}</span>`).join('');
+}
+
+// PUBLIC API
+window.openProjectModal = function (projectId) {
+  const p = PROJECT_REGISTRY[projectId];
+  if (!p) {
+    window.location.href = { ser: 'project-ser.html', sales: 'project-sales.html', fraud: 'project-fraud.html', customer: 'project-customer.html', webscrape: 'project-webscrape.html', stock: 'project-stock.html' }[projectId] || '#';
+    return;
   }
+
+  _pmCleanup();
+  _pmPopulateInfo(projectId);
+
+  const area = document.getElementById('pm-demo-area');
+  area.innerHTML = '';
+  p.buildDemo(area);
+
+  document.getElementById('project-modal').classList.add('active');
+  document.body.style.overflow = 'hidden';
 };
+
+window.closeProjectModal = function () {
+  document.getElementById('project-modal').classList.remove('active');
+  document.body.style.overflow = '';
+  _pmCleanup();
+  // Clear demo area to stop any lingering audio/chart
+  const area = document.getElementById('pm-demo-area');
+  if (area) area.innerHTML = '';
+};
+

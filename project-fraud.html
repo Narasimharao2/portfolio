@@ -303,15 +303,14 @@
     </footer>
 
     <script>
-        <script>
         document.getElementById('fill-fraud').addEventListener('click', () => {
-                document.getElementById('amount').value = 12500;
+            document.getElementById('amount').value = 12500;
             document.getElementById('location').value = 'ru';
             document.getElementById('category').value = 'jewelry';
         });
 
         document.getElementById('fraud-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
+            e.preventDefault();
             const amount = parseFloat(document.getElementById('amount').value) || 0;
             const loc = document.getElementById('location').value;
             const cat = document.getElementById('category').value;
@@ -329,59 +328,59 @@
             try {
                 // Attempt Backend Analysis
                 const response = await fetch('http://localhost:5000/api/fraud/analyze', {
-                method: 'POST',
-            headers: {'Content-Type': 'application/json' },
-            body: JSON.stringify({amount, location: loc, category: cat })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, location: loc, category: cat })
                 });
 
-            if (!response.ok) throw new Error("API Offline");
+                if (!response.ok) throw new Error("API Offline");
 
-            const data = await response.json();
-            displayResult(data.is_fraud, data.risk_score, data.risk_factors);
+                const data = await response.json();
+                displayResult(data.is_fraud, data.risk_score, data.risk_factors);
 
             } catch (error) {
                 console.warn("Backend unavailable, using deterministic simulation:", error);
 
-            // Fallback Deterministic Logic
-            let riskScore = 0;
-            const riskFactors = [];
+                // Fallback Deterministic Logic
+                let riskScore = 0;
+                const riskFactors = [];
 
-                if (amount > 10000) {riskScore += 40; riskFactors.push("High Transaction Value"); }
-                else if (amount > 5000) {riskScore += 20; }
+                if (amount > 10000) { riskScore += 40; riskFactors.push("High Transaction Value"); }
+                else if (amount > 5000) { riskScore += 20; }
 
-            if (loc !== 'us' && loc !== 'uk') {riskScore += 35; riskFactors.push("High-Risk Geo-Location"); }
-            if (cat === 'jewelry' || cat === 'gaming') {riskScore += 25; riskFactors.push("High-Risk Merchant Category"); }
+                if (loc !== 'us' && loc !== 'uk') { riskScore += 35; riskFactors.push("High-Risk Geo-Location"); }
+                if (cat === 'jewelry' || cat === 'gaming') { riskScore += 25; riskFactors.push("High-Risk Merchant Category"); }
 
-            riskScore = Math.min(100, riskScore);
+                riskScore = Math.min(100, riskScore);
                 const isFraud = riskScore >= 50;
-                
+
                 setTimeout(() => {
-                displayResult(isFraud, riskScore, riskFactors);
+                    displayResult(isFraud, riskScore, riskFactors);
                 }, 1000);
             }
 
             function displayResult(isFraud, riskScore, riskFactors) {
                 btn.innerHTML = originalBtnText;
-            btn.disabled = false;
-            panel.classList.add('visible');
+                btn.disabled = false;
+                panel.classList.add('visible');
 
-            if (isFraud) {
-                display.innerHTML = `
+                if (isFraud) {
+                    display.innerHTML = `
                         <div class="status-badge status-danger">⚠️ High Risk Detected</div>
                         <div style="margin-top:1rem; font-weight:bold; color:#ff3232; font-size:1.5rem;">Risk Score: ${riskScore}/100</div>
                     `;
-            reason.innerHTML = `
+                    reason.innerHTML = `
             <ul style="list-style:none; padding:0; text-align:left; display:inline-block; margin-top:1rem;">
                 ${riskFactors.map(f => `<li style="margin:5px 0;">❌ ${f}</li>`).join('')}
             </ul>
             <p style="margin-top:1rem;">Decision: <strong>BLOCK TRANSACTION</strong></p>
             `;
                 } else {
-                display.innerHTML = `
+                    display.innerHTML = `
                         <div class="status-badge status-safe">✅ Transaction Safe</div>
                         <div style="margin-top:1rem; font-weight:bold; color:#00ff88; font-size:1.5rem;">Risk Score: ${riskScore}/100</div>
                         `;
-            reason.innerHTML = `<p style="opacity:0.8; margin-top:1rem;">Transaction falls within normal parameters.<br>Decision: <strong>APPROVE</strong></p>`;
+                    reason.innerHTML = `<p style="opacity:0.8; margin-top:1rem;">Transaction falls within normal parameters.<br>Decision: <strong>APPROVE</strong></p>`;
                 }
             }
         });

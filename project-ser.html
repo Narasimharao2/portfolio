@@ -237,7 +237,6 @@
     </footer>
 
     <script>
-        <script>
         // Real Web Audio API Implementation
         document.addEventListener('DOMContentLoaded', () => {
             const visualizer = document.getElementById('visualizer');
@@ -249,9 +248,9 @@
             // Initialize bars
             for (let i = 0; i < numBars; i++) {
                 const bar = document.createElement('div');
-            bar.className = 'waveform-bar';
-            visualizer.appendChild(bar);
-            bars.push(bar);
+                bar.className = 'waveform-bar';
+                visualizer.appendChild(bar);
+                bars.push(bar);
             }
 
             let audioContext;
@@ -262,106 +261,110 @@
 
             async function setupAudio() {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({audio: true });
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            source = audioContext.createMediaStreamSource(stream);
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    source = audioContext.createMediaStreamSource(stream);
 
-            source.connect(analyser);
-            analyser.fftSize = 256;
+                    source.connect(analyser);
+                    analyser.fftSize = 256;
 
-            drawVisualizer();
+                    drawVisualizer();
 
-            recordBtn.innerHTML = '<span class="icon">⏹️</span> Stop Recording';
-            recordBtn.classList.add('active');
-            resultBox.classList.remove('visible');
-            visualizer.classList.add('active-recording'); // Custom class if needed
+                    recordBtn.innerHTML = '<span class="icon">⏹️</span> Stop Recording';
+                    recordBtn.classList.add('active');
+                    resultBox.classList.remove('visible');
+                    visualizer.classList.add('active-recording'); // Custom class if needed
                 } catch (err) {
-                console.error('Error accessing microphone:', err);
-            alert('Microphone access denied or not available. Please allow permissions to use the demo.');
-            isRecording = false;
+                    console.error('Error accessing microphone:', err);
+                    alert('Microphone access denied or not available. Please allow permissions to use the demo.');
+                    isRecording = false;
                 }
             }
 
             function drawVisualizer() {
                 if (!isRecording) return;
 
-            animationId = requestAnimationFrame(drawVisualizer);
+                animationId = requestAnimationFrame(drawVisualizer);
 
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteFrequencyData(dataArray);
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
 
-            // Map frequency data to bars (simple downsampling)
-            const step = Math.floor(bufferLength / numBars);
+                // Map frequency data to bars (simple downsampling)
+                const step = Math.floor(bufferLength / numBars);
 
-            for (let i = 0; i < numBars; i++) {
+                for (let i = 0; i < numBars; i++) {
                     const value = dataArray[i * step];
-            const height = Math.max(10, (value / 255) * 150); // Scale to max 150px
-            bars[i].style.height = `${height}px`;
+                    const height = Math.max(10, (value / 255) * 150); // Scale to max 150px
+                    bars[i].style.height = `${height}px`;
 
                     // Dynamic color based on volume/intensity
                     if (value > 200) {
-                bars[i].style.background = '#ff0055'; // Peak color
+                        bars[i].style.background = '#ff0055'; // Peak color
                     } else if (value > 100) {
-                bars[i].style.background = '#00ff88'; // Mid color
+                        bars[i].style.background = '#00ff88'; // Mid color
                     } else {
-                bars[i].style.background = '#00ff88'; // Base color
+                        bars[i].style.background = '#00ff88'; // Base color
                     }
                 }
             }
 
             function stopAudio() {
                 if (audioContext) {
-                audioContext.close();
+                    audioContext.close();
                 }
-            if (animationId) {
-                cancelAnimationFrame(animationId);
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
                 }
 
                 // Reset bars
                 bars.forEach(bar => {
-                bar.style.height = '10px';
-            bar.style.background = '';
+                    bar.style.height = '10px';
+                    bar.style.background = '';
                 });
 
-            recordBtn.innerHTML = '<span class="icon">🎙️</span> Record Again';
-            recordBtn.classList.remove('active');
+                recordBtn.innerHTML = '<span class="icon">🎙️</span> Record Again';
+                recordBtn.classList.remove('active');
 
-            // Backend Integration with Fallback
-            fetchPrediction();
+                // Backend Integration with Fallback
+                fetchPrediction();
             }
 
             async function fetchPrediction() {
                 try {
                     // In a real app, we would send the recorded audio blob here.
+                    const formData = new FormData();
+                    formData.append('simulate', 'true'); // Explicitly tell backend we are in simulation mode
+
                     const response = await fetch('http://localhost:5000/api/ser/predict', {
-                method: 'POST',
-            body: new FormData() // Empty form data for simulation
+                        method: 'POST',
+                        body: formData
                     });
 
-            if (!response.ok) throw new Error("API Offline");
+                    const result = await response.json();
+                    if (result.status !== 'success') throw new Error(result.message || "API Error");
 
-            const data = await response.json();
+                    const data = result.data;
 
-            document.getElementById('emotion-text').innerHTML = `
+                    document.getElementById('emotion-text').innerHTML = `
             <span>${getEmotionIcon(data.emotion)}</span> ${data.emotion} (${data.confidence}%)
             `;
-            resultBox.classList.add('visible');
+                    resultBox.classList.add('visible');
 
                 } catch (error) {
-                console.warn("Backend unavailable, using simulation:", error);
-            // Fallback Simulation
-            simulatePrediction();
+                    console.warn("Backend unavailable or error occurred, using simulation:", error);
+                    // Fallback Simulation
+                    simulatePrediction();
                 }
             }
 
             function getEmotionIcon(emotion) {
                 const map = {
-                'Happy': '😊', 'Sad': '😢', 'Angry': '😠',
-            'Neutral': '😐', 'Surprise': '😲', 'Fear': '😨'
+                    'Happy': '😊', 'Sad': '😢', 'Angry': '😠',
+                    'Neutral': '😐', 'Surprise': '😲', 'Fear': '😨'
                 };
-            return map[emotion] || '🤔';
+                return map[emotion] || '🤔';
             }
 
             function simulatePrediction() {
@@ -381,11 +384,11 @@
 
             recordBtn.addEventListener('click', () => {
                 if (!isRecording) {
-                isRecording = true;
-            setupAudio();
+                    isRecording = true;
+                    setupAudio();
                 } else {
-                isRecording = false;
-            stopAudio();
+                    isRecording = false;
+                    stopAudio();
                 }
             });
         });

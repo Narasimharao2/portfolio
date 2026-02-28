@@ -1,14 +1,19 @@
-from flask import Blueprint
-from api.utils import api_response, log_api_call
+"""API blueprint for sales data simulation."""
 import time
 
+from flask import Blueprint
+
+from api.utils import api_response, log_api_call
+
 sales_bp = Blueprint('sales', __name__)
+
 
 @sales_bp.route('/data', methods=['GET'])
 @log_api_call
 def get_sales_data():
+    """Return simulated sales performance data."""
     time.sleep(0.8)
-    
+
     data = {
         "total_revenue": 1245000,
         "growth": 15.4,
@@ -19,5 +24,5 @@ def get_sales_data():
             "Asia": 25
         }
     }
-    
+
     return api_response(data=data)

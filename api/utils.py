@@ -1,14 +1,17 @@
-from flask import jsonify
+"""Shared utility functions for API blueprints."""
 import logging
-from functools import wraps
 import time
+from functools import wraps
+
+from flask import jsonify
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def api_response(status="success", data=None, message=None, code=200):
-    """Standardized API response structure."""
+    """Return a standardised JSON API response."""
     response = {
         "status": status,
         "timestamp": time.time()
@@ -17,17 +20,18 @@ def api_response(status="success", data=None, message=None, code=200):
         response["data"] = data
     if message is not None:
         response["message"] = message
-        
+
     return jsonify(response), code
 
-def log_api_call(f):
-    """Decorator to log API calls."""
-    @wraps(f)
+
+def log_api_call(func):
+    """Decorator that logs the name and duration of an API call."""
+    @wraps(func)
     def decorated_function(*args, **kwargs):
-        logger.info(f"API Call: {f.__name__} called.")
+        logger.info("API Call: %s called.", func.__name__)
         start_time = time.time()
-        result = f(*args, **kwargs)
+        result = func(*args, **kwargs)
         duration = time.time() - start_time
-        logger.info(f"API Call: {f.__name__} completed in {duration:.4f}s.")
+        logger.info("API Call: %s completed in %.4fs.", func.__name__, duration)
         return result
     return decorated_function

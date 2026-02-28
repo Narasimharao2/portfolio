@@ -1,11 +1,9 @@
-from flask import Flask, jsonify, send_from_directory
-from flask_cors import CORS
-from flask_compress import Compress
+"""Flask application entry point for the portfolio website."""
 import os
 
-app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing for all routes
-Compress(app) # Enable Gzip Compression
+from flask import Flask, send_from_directory
+from flask_cors import CORS
+from flask_compress import Compress
 
 from api.ser import ser_bp
 from api.stock import stock_bp
@@ -13,6 +11,11 @@ from api.fraud import fraud_bp
 from api.sales import sales_bp
 from api.customer import customer_bp
 from api.webscrape import webscrape_bp
+from api.contact import contact_bp
+
+app = Flask(__name__)
+CORS(app)      # Enable Cross-Origin Resource Sharing for all routes
+Compress(app)  # Enable Gzip Compression
 
 # Register blueprints
 app.register_blueprint(ser_bp, url_prefix='/api/ser')
@@ -21,17 +24,20 @@ app.register_blueprint(fraud_bp, url_prefix='/api/fraud')
 app.register_blueprint(sales_bp, url_prefix='/api/sales')
 app.register_blueprint(customer_bp, url_prefix='/api/customer')
 app.register_blueprint(webscrape_bp, url_prefix='/api/webscrape')
-
-from api.contact import contact_bp
 app.register_blueprint(contact_bp, url_prefix='/api/contact')
+
 
 @app.route('/')
 def home():
+    """Serve the main portfolio page."""
     return send_from_directory('.', 'index.html')
+
 
 @app.route('/<path:path>')
 def serve_static(path):
+    """Serve static files from the project root."""
     return send_from_directory('.', path)
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

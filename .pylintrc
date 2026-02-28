@@ -1,0 +1,16 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=1
+
+[MESSAGES CONTROL]
+# Disable import-error (E0401) because the CI lint environment does not
+# install Flask / requests etc. – the real runtime has them via requirements.txt
+disable=
+    import-error,
+    C0301
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-args=6

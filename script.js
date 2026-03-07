@@ -42,23 +42,31 @@ if (hamburger && navLinks) {
 const header = document.querySelector('header');
 const scrollToTopBtn = document.getElementById('scroll-to-top');
 
-window.addEventListener('scroll', () => {
-  // Header effect
-  if (window.scrollY > 100) {
-    header.style.background = 'rgba(10, 10, 10, 0.98)';
-    header.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.3)';
-  } else {
-    header.style.background = 'rgba(10, 10, 10, 0.95)';
-    header.style.boxShadow = 'none';
-  }
+let isScrolling = false;
 
-  // Scroll to top button visibility
-  if (scrollToTopBtn) {
-    if (window.scrollY > 500) {
-      scrollToTopBtn.classList.add('visible');
-    } else {
-      scrollToTopBtn.classList.remove('visible');
-    }
+window.addEventListener('scroll', () => {
+  if (!isScrolling) {
+    window.requestAnimationFrame(() => {
+      // Header effect
+      if (window.scrollY > 100) {
+        header.style.background = 'rgba(10, 10, 10, 0.98)';
+        header.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.3)';
+      } else {
+        header.style.background = 'rgba(10, 10, 10, 0.95)';
+        header.style.boxShadow = 'none';
+      }
+
+      // Scroll to top button visibility
+      if (scrollToTopBtn) {
+        if (window.scrollY > 500) {
+          scrollToTopBtn.classList.add('visible');
+        } else {
+          scrollToTopBtn.classList.remove('visible');
+        }
+      }
+      isScrolling = false;
+    });
+    isScrolling = true;
   }
 });
 
@@ -133,7 +141,7 @@ if (contactForm) {
 
       // Show Simulation Alert if applicable
       if (result.mode === 'simulation' || (result.data && result.data.mode === 'simulation')) {
-        alert('Test Mode: Message received by backend simulation! (No real email sent)');
+        showToast('Test Mode: Message received by backend simulation! (No real email sent)', 'success');
       }
 
       this.reset();
@@ -153,7 +161,7 @@ if (contactForm) {
       submitButton.style.background = '#ff3232'; // Error Red
 
       // Alert the specific error to guide the user
-      alert(error.message);
+      showToast(error.message, 'error');
 
       setTimeout(() => {
         submitButton.innerHTML = originalContent;
@@ -185,31 +193,46 @@ document.querySelectorAll('.skill-card').forEach(card => {
   });
 });
 
-// Active navigation link highlighting
-const sections = document.querySelectorAll('section[id]');
+// Active navigation link highlighting (Optimized with Intersection Observer)
 const navLinksForActive = document.querySelectorAll('.nav-links a');
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop;
-    if (window.scrollY >= (sectionTop - 200)) {
-      current = section.getAttribute('id');
+const sections = document.querySelectorAll('section[id]');
+
+const navObserverOptions = {
+  threshold: 0.2, // Trigger when 20% of the section is visible
+  rootMargin: "-20% 0px -70% 0px" // Adjust to trigger correctly while scrolling down
+};
+
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const currentId = entry.target.getAttribute('id');
+      navLinksForActive.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentId}`) {
+          link.classList.add('active');
+        }
+      });
     }
   });
-  navLinksForActive.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href').slice(1) === current) {
-      link.classList.add('active');
-    }
-  });
+}, navObserverOptions);
+
+sections.forEach(section => {
+  navObserver.observe(section);
 });
 
-// Add parallax effect to hero sphere
+// Add parallax effect to hero sphere (Optimized)
+let isParallaxScrolling = false;
 window.addEventListener('scroll', () => {
-  const sphere = document.querySelector('.sphere');
-  if (sphere) {
-    const scrolled = window.scrollY;
-    sphere.style.transform = `translateY(${scrolled * 0.3}px)`;
+  if (!isParallaxScrolling) {
+    window.requestAnimationFrame(() => {
+      const sphere = document.querySelector('.sphere');
+      if (sphere) {
+        const scrolled = window.scrollY;
+        sphere.style.transform = `translateY(${scrolled * 0.3}px) translateZ(0)`;
+      }
+      isParallaxScrolling = false;
+    });
+    isParallaxScrolling = true;
   }
 });
 
@@ -949,8 +972,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         camera.position.z = 3.5;
 
-        function animate() {
-          requestAnimationFrame(animate);
+        let animationId = null;
+        let lastTime = 0;
+        const targetFPS = 30;
+        const frameInterval = 1000 / targetFPS;
+
+        function animate(time) {
+          animationId = requestAnimationFrame(animate);
+
+          // Optional: completely pause if chat is open to save CPU
+          const chatWindow = document.getElementById('chat-window');
+          if (chatWindow && chatWindow.classList.contains('active')) {
+            return;
+          }
+
+          // Throttle to target FPS
+          if (time - lastTime < frameInterval) return;
+          lastTime = time;
+
           if (sphere) {
             sphere.rotation.x += 0.008;
             sphere.rotation.y += 0.01;
@@ -959,7 +998,18 @@ document.addEventListener('DOMContentLoaded', function () {
           renderer.render(scene, camera);
         }
 
-        animate();
+        // Performance Optimization: Pause rendering when chatbot is out of view (hidden or tab inactive)
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            if (!animationId) animate(performance.now());
+          } else {
+            if (animationId) {
+              cancelAnimationFrame(animationId);
+              animationId = null;
+            }
+          }
+        }, { threshold: 0.1 });
+        observer.observe(container);
 
         container.addEventListener('mouseenter', () => {
           material.color.setHex(0x7b61ff); // Purple on hover
@@ -1002,8 +1052,11 @@ document.addEventListener('DOMContentLoaded', () => {
     container.appendChild(renderer.domElement);
 
     // Create Particles (Data Points)
+    // Reduce particle count significantly on mobile to save CPU/GPU
+    const isMobile = window.innerWidth < 768;
+    const count = isMobile ? 600 : 2000;
+
     const geometry = new THREE.BufferGeometry();
-    const count = 2000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
@@ -1059,8 +1112,9 @@ document.addEventListener('DOMContentLoaded', () => {
       mouseY = (e.clientY - windowHalfY) * 0.001;
     });
 
+    let animationId = null;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
 
       // Constant smooth rotation (Base)
       sphere.rotation.y += 0.004;
@@ -1077,7 +1131,23 @@ document.addEventListener('DOMContentLoaded', () => {
       renderer.render(scene, camera);
     };
 
-    animate();
+    // Performance Optimization: Only render when Hero section is visible
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          if (!animationId) animate();
+        } else {
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+          }
+        }
+      }, { threshold: 0.1 });
+      observer.observe(heroSection);
+    } else {
+      animate(); // Fallback if hero section missing
+    }
 
     // Handle Resize
     window.addEventListener('resize', () => {
@@ -1784,3 +1854,91 @@ window.closeProjectModal = function () {
   if (area) area.innerHTML = '';
 };
 
+// ================================================
+// CONTACT FORM SUBMISSION LOGIC
+// ================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const contactForm = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('form-submit-btn');
+
+  if (contactForm && submitBtn) {
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Update button state visually
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<span>Sending... ⏳</span>';
+      submitBtn.disabled = true;
+
+      // Extract form data
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const subject = document.getElementById('subject').value;
+      const message = document.getElementById('message').value;
+
+      try {
+        const response = await fetch('/api/contact/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, subject, message })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast('Message sent successfully!', 'success');
+          contactForm.reset();
+        } else {
+          showToast('Error sending message: ' + (data.error || 'Unknown error occurred.'), 'error');
+        }
+      } catch (error) {
+        console.error('Contact form submission failed:', error);
+        showToast('Failed to connect to the server. Please check your connection and try again.', 'error');
+      } finally {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+  }
+});
+
+/* =========================================
+   TOAST NOTIFICATION SYSTEM
+   ========================================= */
+function showToast(message, type = 'success') {
+  // Create container if it doesn't exist
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  // Choose icon based on type
+  const icon = type === 'success' ? '✅' : '❌';
+
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <span class="toast-message">${message}</span>
+  `;
+
+  // Add to container
+  container.appendChild(toast);
+
+  // Auto remove after 4 seconds
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => {
+      if (toast.parentNode === container) {
+        container.removeChild(toast);
+      }
+    }, 300); // Wait for fade-out animation
+  }, 4000);
+}

@@ -4,6 +4,10 @@ StyleAI is a full-stack AI fashion app where users upload a photo and generate o
 
 ## Features
 
+## UI Preview
+
+![StyleAI UI preview](assets/styleai-preview.svg)
+
 - Upload and preview user image
 - Choose outfit style from dropdown
 - AI outfit generation via **Replicate / Stable Diffusion**
@@ -20,6 +24,8 @@ StyleAI is a full-stack AI fashion app where users upload a photo and generate o
 
 ```text
 styleai/
+├── assets/
+│   └── styleai-preview.svg
 ├── backend/
 │   ├── main.py
 │   ├── config.py

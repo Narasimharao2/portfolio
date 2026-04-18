@@ -10,7 +10,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from config import settings
 
 
-class HistoryStore:
+class HistoryStore:  # pylint: disable=too-few-public-methods
+    """Persist outfit generation events to MongoDB when enabled."""
+
     def __init__(self) -> None:
         self.client = None
         self.collection = None
@@ -20,6 +22,8 @@ class HistoryStore:
             self.collection = db["outfit_generations"]
 
     async def save_event(self, payload: dict) -> None:
+        """Persist an event document if MongoDB storage is enabled."""
+
         if self.collection is None:
             return
         await self.collection.insert_one(payload)
@@ -29,6 +33,8 @@ history_store = HistoryStore()
 
 
 def save_upload(file_bytes: bytes, uploads_dir: Path, suffix: str = ".jpg") -> Path:
+    """Save uploaded bytes to disk and return the resulting file path."""
+
     uploads_dir.mkdir(parents=True, exist_ok=True)
     path = uploads_dir / f"upload_{uuid.uuid4().hex}{suffix}"
     path.write_bytes(file_bytes)
@@ -36,6 +42,8 @@ def save_upload(file_bytes: bytes, uploads_dir: Path, suffix: str = ".jpg") -> P
 
 
 def event_record(style: str, upload_url: str, generated_url: str) -> dict:
+    """Create a generation history record payload."""
+
     return {
         "style": style,
         "upload_url": upload_url,

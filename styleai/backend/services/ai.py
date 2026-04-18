@@ -27,10 +27,14 @@ AFFILIATE_LINKS = {
 
 
 def get_prompt(style: str) -> str:
+    """Return the generation prompt mapped to the requested style."""
+
     return STYLE_PROMPTS.get(style.lower(), STYLE_PROMPTS["casual"])
 
 
 def get_affiliate_link(style: str) -> str:
+    """Return the affiliate product link mapped to the chosen style."""
+
     return AFFILIATE_LINKS.get(style.lower(), AFFILIATE_LINKS["casual"])
 
 
@@ -57,7 +61,7 @@ def generate_with_replicate(image_bytes: bytes, style: str) -> str | None:
             return str(output[0])
         if isinstance(output, str):
             return output
-    except Exception:
+    except replicate.exceptions.ReplicateError:
         return None
     return None
 
@@ -79,7 +83,7 @@ def generate_local_preview(image_bytes: bytes, style: str, generated_dir: Path) 
     text = f"AI Outfit Preview: {style.title()}"
     try:
         font = ImageFont.truetype("DejaVuSans.ttf", size=max(20, image.width // 28))
-    except Exception:
+    except OSError:
         font = ImageFont.load_default()
 
     drawer.text((20, image.height - bar_height + 20), text, fill=(255, 255, 255, 230), font=font)

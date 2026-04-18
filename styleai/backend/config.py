@@ -3,7 +3,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings):  # pylint: disable=too-few-public-methods
+    """Application settings loaded from environment variables."""
+
     app_name: str = "StyleAI API"
     app_env: str = "development"
     base_url: str = "http://localhost:8000"

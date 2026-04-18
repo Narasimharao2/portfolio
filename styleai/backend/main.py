@@ -30,6 +30,8 @@ app.mount("/generated", StaticFiles(directory=settings.generated_dir), name="gen
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    """Return liveness status for uptime checks."""
+
     return {"status": "ok", "env": settings.app_env}
 
 
@@ -38,6 +40,8 @@ async def generate_outfit(
     image: UploadFile = File(...),
     style: str = Form(...),
 ) -> OutfitResponse:
+    """Generate an outfit image URL from an uploaded person image and chosen style."""
+
     if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
         raise HTTPException(status_code=400, detail="Only JPG, PNG, and WEBP images are supported.")
 
@@ -62,7 +66,7 @@ async def generate_outfit(
                 response.raise_for_status()
             local_path = save_upload(response.content, settings.generated_dir, suffix=".jpg")
             generated_url = f"{settings.base_url}/generated/{local_path.name}"
-        except Exception:
+        except (httpx.HTTPError, ValueError):
             # Keep original URL if downloading fails.
             pass
 

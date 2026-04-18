@@ -1,36 +1,30 @@
-import { useMemo, useState } from 'react'
-import axios from 'axios'
-import ImageUploader from './components/ImageUploader'
-import LoadingSpinner from './components/LoadingSpinner'
-import ResultSection from './components/ResultSection'
+import { useEffect, useMemo, useState } from 'react'
+import { useOutfitGenerator } from './hooks/useOutfitGenerator'
+  const { isLoading, result, error, setError, generate, resetResult } = useOutfitGenerator()
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-const STYLES = ['casual', 'formal', 'party', 'celebrity-inspired']
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
 
-export default function App() {
-  const [selectedStyle, setSelectedStyle] = useState(STYLES[0])
-  const [file, setFile] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState('')
-
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : ''), [file])
-
-  const handleFileChange = (event) => {
-    const picked = event.target.files?.[0]
-    setFile(picked || null)
-    setResult(null)
-    setError('')
+    resetResult()
+  const handleGenerate = async () => {
+    await generate({ file, style: selectedStyle })
   }
 
-  const generate = async () => {
-    if (!file) {
-      setError('Please upload an image first.')
-      return
-    }
-
-    try {
-      setError('')
+          <button className="generate-btn" onClick={handleGenerate} disabled={isLoading}>
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <ResultSection
+              result={result}
+              style={selectedStyle}
+              onDownload={handleDownload}
+              onShare={handleShare}
+              onRetry={handleGenerate}
+            />
+          )}
       setIsLoading(true)
       const formData = new FormData()
       formData.append('image', file)

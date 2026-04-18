@@ -40,6 +40,7 @@ styleai/
 │       └── storage.py
 ├── frontend/
 │   ├── package.json
+│   ├── README.md
 │   ├── vite.config.js
 │   ├── .env.example
 │   ├── index.html
@@ -47,10 +48,17 @@ styleai/
 │       ├── main.jsx
 │       ├── App.jsx
 │       ├── styles.css
+│       ├── constants.js
+│       ├── hooks/useOutfitGenerator.js
+│       ├── services/outfitApi.js
+│       ├── utils/share.js
 │       └── components/
+│           ├── ActionButtons.jsx
+│           ├── ErrorBanner.jsx
 │           ├── ImageUploader.jsx
 │           ├── LoadingSpinner.jsx
-│           └── ResultSection.jsx
+│           ├── ResultSection.jsx
+│           └── StyleSelector.jsx
 └── README.md
 ```
 
